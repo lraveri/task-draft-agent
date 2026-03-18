@@ -11,6 +11,7 @@ import { JiraService } from "./services/jira.ts";
 import { OpencodeService } from "./services/opencode.ts";
 import { getDatabase, type Database } from "./db/database.ts";
 import { SlackService } from "./services/slack.ts";
+import { WorktreeService, isWorktreeEnabled } from "./services/worktree.ts";
 import { slackEventsRoutes } from "./routes/slack-events.ts";
 import { contactRoutes } from "./routes/contact.ts";
 import { getConfig } from "./config.ts";
@@ -21,6 +22,7 @@ declare module "fastify" {
     opencode: OpencodeService;
     database: Database;
     slackService?: SlackService;
+    worktreeService?: WorktreeService;
   }
 }
 
@@ -29,6 +31,7 @@ export interface AppDependencies {
   opencode?: OpencodeService;
   database?: Database;
   slackService?: SlackService;
+  worktreeService?: WorktreeService;
 }
 
 export async function buildApp(deps?: AppDependencies) {
@@ -42,6 +45,8 @@ export async function buildApp(deps?: AppDependencies) {
   app.decorate("jira", deps?.jira ?? new JiraService());
   app.decorate("opencode", deps?.opencode ?? new OpencodeService());
   app.decorate("database", deps?.database ?? getDatabase());
+  const worktreeService = deps?.worktreeService ?? (isWorktreeEnabled() ? new WorktreeService() : undefined);
+  app.decorate("worktreeService", worktreeService);
   let slackService = deps?.slackService;
   if (!slackService) {
     const slackApp = new App({

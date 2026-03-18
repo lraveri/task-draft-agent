@@ -122,8 +122,15 @@ export async function jiraWebhookRoutes(app: FastifyInstance): Promise<void> {
       try {
         const issue = jira.parseWebhook(payload);
 
+        const { worktreeService } = this;
+        let worktreePath: string | undefined;
+        if (worktreeService) {
+          worktreePath = await worktreeService.create(jiraKey);
+        }
+
         const sessionId = await opencode.createSession(
           `${jiraKey} — ${issue.summary}`,
+          worktreePath,
         );
 
         const slackChannel = config.SLACK_CHANNEL;
@@ -140,7 +147,7 @@ export async function jiraWebhookRoutes(app: FastifyInstance): Promise<void> {
           database.createSlackThread(mainThreadTs, slackChannel, sessionId);
         }
 
-        database.createTask(jiraKey, sessionId, mainThreadTs);
+        database.createTask(jiraKey, sessionId, mainThreadTs, worktreePath);
 
         const prompt = jira.buildTaskPrompt({
           issue,
