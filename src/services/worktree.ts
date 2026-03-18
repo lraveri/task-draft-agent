@@ -9,13 +9,13 @@ const execAsync = promisify(exec);
 export class WorktreeService {
   private baseDir: string;
   private repoPath: string;
-  private setupCmd: string | undefined;
+  private setupScript: string | undefined;
 
   constructor() {
     const config = getConfig();
     this.baseDir = config.WORKTREE_BASE_DIR;
     this.repoPath = config.GIT_REPO_PATH!;
-    this.setupCmd = config.WORKTREE_SETUP_CMD;
+    this.setupScript = config.WORKTREE_SETUP_SCRIPT;
   }
 
   worktreePath(jiraKey: string): string {
@@ -40,9 +40,12 @@ export class WorktreeService {
     );
     console.log(`[worktree] Created at ${worktreePath} on branch ${branch}`);
 
-    if (this.setupCmd) {
-      console.log(`[worktree] Running setup: ${this.setupCmd}`);
-      const { stdout, stderr } = await execAsync(this.setupCmd, { cwd: worktreePath });
+    if (this.setupScript) {
+      console.log(`[worktree] Running setup script: ${this.setupScript}`);
+      const { stdout, stderr } = await execAsync(
+        `bash "${this.setupScript}"`,
+        { cwd: worktreePath },
+      );
       if (stdout) process.stdout.write(stdout);
       if (stderr) process.stderr.write(stderr);
       console.log(`[worktree] Setup complete`);
