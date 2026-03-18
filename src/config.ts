@@ -15,6 +15,10 @@ const configSchema = z.object({
   JIRA_BASE_URL: z.string(),
   JIRA_USER_EMAIL: z.string(),
   JIRA_API_TOKEN: z.string(),
+  // Git worktree isolation: set GIT_REPO_PATH to enable per-task worktrees
+  GIT_REPO_PATH: z.string().optional(),
+  WORKTREE_BASE_DIR: z.string().default(path.join(process.cwd(), "data", "worktrees")),
+  WORKTREE_SETUP_SCRIPT: z.string().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

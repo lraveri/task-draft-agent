@@ -12,9 +12,10 @@ export class OpencodeService {
     });
   }
 
-  async createSession(title: string): Promise<string> {
+  async createSession(title: string, directory?: string): Promise<string> {
     const response = await this.client.session.create({
       body: { title },
+      query: directory ? { directory } : undefined,
     });
     return response.data!.id;
   }

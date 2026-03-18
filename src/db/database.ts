@@ -24,9 +24,17 @@ export class Database {
         jira_key TEXT PRIMARY KEY,
         opencode_session_id TEXT NOT NULL,
         main_slack_thread_ts TEXT,
+        worktree_path TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
+
+    // Migration: add worktree_path for existing databases
+    try {
+      this.db.exec("ALTER TABLE tasks ADD COLUMN worktree_path TEXT");
+    } catch {
+      // Column already exists — no-op
+    }
 
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS slack_threads (
@@ -55,12 +63,13 @@ export class Database {
     jiraKey: string,
     sessionId: string,
     slackThreadTs?: string,
+    worktreePath?: string,
   ): void {
     const stmt = this.db.prepare(`
-      INSERT INTO tasks (jira_key, opencode_session_id, main_slack_thread_ts)
-      VALUES (?, ?, ?)
+      INSERT INTO tasks (jira_key, opencode_session_id, main_slack_thread_ts, worktree_path)
+      VALUES (?, ?, ?, ?)
     `);
-    stmt.run(jiraKey, sessionId, slackThreadTs ?? null);
+    stmt.run(jiraKey, sessionId, slackThreadTs ?? null, worktreePath ?? null);
   }
 
   getTaskByJiraKey(jiraKey: string) {
@@ -72,6 +81,7 @@ export class Database {
           jira_key: string;
           opencode_session_id: string;
           main_slack_thread_ts: string | null;
+          worktree_path: string | null;
           created_at: string;
         }
       | undefined;
@@ -86,6 +96,7 @@ export class Database {
           jira_key: string;
           opencode_session_id: string;
           main_slack_thread_ts: string | null;
+          worktree_path: string | null;
           created_at: string;
         }
       | undefined;
